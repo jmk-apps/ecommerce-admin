@@ -9,7 +9,7 @@ const ProductPage = async ({
 }) => {
   const { productId, storeId } = await params
 
-  const product = await prismadb.product.findUnique({
+  let product = await prismadb.product.findUnique({
     where: {
       id: productId
     },
@@ -17,6 +17,14 @@ const ProductPage = async ({
       images: true
     }
   })
+
+  let productUpdated: any
+  if (product) {
+    productUpdated = {...product, price: product?.price.toNumber()}
+  } else {
+    productUpdated = null
+  }
+  
 
   const categories = await prismadb.category.findMany({
     where: {
@@ -43,7 +51,7 @@ const ProductPage = async ({
           categories={categories}
           colors={colors}
           sizes={sizes}
-          initialData={product} 
+          initialData={productUpdated} 
         />
       </div>
     </div>

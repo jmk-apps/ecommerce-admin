@@ -9,6 +9,7 @@ import ImageUpload from "@/components/ui/image-upload"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
+import { ProductPriceChange } from "@/lib/types"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Category, Color, Image, Product, Size } from "@prisma/client"
 import axios from "axios"
@@ -34,7 +35,7 @@ const formSchema = z.object({
 type ProductFormValues = z.infer<typeof formSchema>
 
 interface ProductFormProps {
-    initialData: Product & {
+    initialData: ProductPriceChange & {
         images: Image[]
     } | null
     categories: Category[]
@@ -48,6 +49,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     colors,
     sizes,
 }) => {
+
+    const initialDataUpdate = initialData ? {
+        ...initialData,
+        price: parseFloat(String(initialData?.price)),
+    } : null
 
     const params = useParams()
     const router = useRouter()
@@ -63,7 +69,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     const form = useForm<ProductFormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: initialData ? {
-            ...initialData,
+            ...initialDataUpdate,
             price: parseFloat(String(initialData?.price)),
         } : {
             name: "",
@@ -82,13 +88,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             setLoading(true)
 
             if (initialData) {
-                await axios.patch(`/api/${params.storeId}/billboards/${params.billboardId}`, data)
+                await axios.patch(`/api/${params.storeId}/products/${params.productId}`, data)
             } else {
-                await axios.post(`/api/${params.storeId}/billboards`, data)
+                await axios.post(`/api/${params.storeId}/products`, data)
             }
             
             router.refresh()
-            router.push(`/${params.storeId}/billboards`)
+            router.push(`/${params.storeId}/products`)
             toast.success(toastMessage)
         } catch (error) {
             toast.error("Something went wrong.")
@@ -100,12 +106,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     const onDelete = async () => {
         try {
             setLoading(true)
-            await axios.delete(`/api/${params.storeId}/billboards/${params.billboardId}`)
+            await axios.delete(`/api/${params.storeId}/products/${params.productId}`)
             router.refresh()
-            router.push(`/${params.storeId}/billboards`)
-            toast.success("Billboard deleted.")
+            router.push(`/${params.storeId}/products`)
+            toast.success("Product deleted.")
         } catch (error) {
-           toast.error("Make sure you removed all categories using this billboard first.") 
+           toast.error("Something went wrong.") 
         } finally {
             setLoading(false)
             setOpen(false)
@@ -309,7 +315,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                                             Featured
                                         </FormLabel>
                                         <FormDescription>
-                                            This product will appear on the home page
+                                            This product will appear on the home page.
                                         </FormDescription>
                                     </div>
                                 </FormItem>
@@ -331,7 +337,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                                             Archived
                                         </FormLabel>
                                         <FormDescription>
-                                            This product will not appear anywhere in the store
+                                            This product will not appear anywhere in the store.
                                         </FormDescription>
                                     </div>
                                 </FormItem>
